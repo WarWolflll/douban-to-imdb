@@ -2,6 +2,7 @@ import os
 import sys
 import csv
 import requests
+import random,time
 from datetime import datetime
 from bs4 import BeautifulSoup
 
@@ -9,8 +10,9 @@ USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36
              'Chrome/47.0.2526.106 Safari/537.36 '
 START_DATE = '20050502'
 IS_OVER = False
-
-
+#因目前豆瓣的反爬机制，不登录时抓取内容会被 ban IP，此处输入你的 Cookie，模拟登录状态
+COOKIE = ''
+headers = {'User-Agent': USER_AGENT, 'Cookie': COOKIE}
 def get_rating(rating_class):
     """
     :param rating_class: string
@@ -22,7 +24,9 @@ def get_rating(rating_class):
 
 
 def get_imdb_id(url):
-    r = requests.get(url, headers={'User-Agent': USER_AGENT})
+    r = requests.get(url, headers = headers)
+    #因目前豆瓣的反爬机制,爬取速度过快时，豆瓣将限制登录一段时间，因此需要 sleep 几秒，后同
+    time.sleep(random.uniform(1.1, 5.4))
     soup = BeautifulSoup(r.text, 'lxml')
     info_area = soup.find(id='info')
     imdb_id = None
@@ -43,12 +47,14 @@ def get_imdb_id(url):
 
 def get_info(url):
     info = []
-    r = requests.get(url, headers={'User-Agent': USER_AGENT})
+    r = requests.get(url, headers = headers)
+    time.sleep(random.uniform(1.1, 5.4))
     soup = BeautifulSoup(r.text, "lxml")
     movie_items = soup.find_all("div", {"class": "item"})
     if len(movie_items) > 0:
         for item in movie_items:
             # meta data
+            #time.sleep(random.uniform(1.1, 5.4))
             douban_link = item.a['href']
             title = item.find("li", {"class": "title"}).em.text
 
@@ -83,7 +89,8 @@ def get_info(url):
 
 def get_max_index(user_id):
     url = f"https://movie.douban.com/people/{user_id}/collect"
-    r = requests.get(url, headers={'User-Agent': USER_AGENT})
+    r = requests.get(url, headers = headers)
+    time.sleep(random.uniform(1.1, 5.4))
     soup = BeautifulSoup(r.text, "lxml")
 
     paginator = soup.find("div", {"class": "paginator"})
@@ -121,7 +128,8 @@ def export(user_id):
 
 
 def check_user_exist(user_id):
-    r = requests.get(f'https://movie.douban.com/people/{user_id}/', headers={'User-Agent': USER_AGENT})
+    r = requests.get(f'https://movie.douban.com/people/{user_id}/', headers = headers)
+    time.sleep(random.uniform(1.1, 5.4))
     soup = BeautifulSoup(r.text, 'lxml')
     if '页面不存在' in soup.title:
         return False
